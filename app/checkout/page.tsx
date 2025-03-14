@@ -1,23 +1,30 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Separator } from "@/components/ui/separator"
 import { useCart } from "@/lib/cart-context"
-import { ArrowLeft, CreditCard, MapPin, Clock, AlertCircle } from "lucide-react"
-import Link from "next/link"
+import { useUser } from "@/lib/user-context"
+import { ArrowLeft, MapPin, CreditCard } from "lucide-react"
 import { toast } from "sonner"
+import { getAvailablePaymentMethods } from "@/lib/payment-service"
 
 export default function CheckoutPage() {
   const router = useRouter()
-  const { items, subtotal, clearCart } = useCart()
-  const [loading, setLoading] = useState(false)
-  const [address, setAddress] = useState("校园公寓 3号楼 512室")
-  const [paymentMethod, setPaymentMethod] = useState("微信支付")
-  const [deliveryTime, setDeliveryTime] = useState("尽快送达")
-  
+  const { items, clearCart, totalItems, subtotal } = useCart()
+  const { isAuthenticated } = useUser()
+  const [isLoading, setIsLoading] = useState(false)
+  const [selectedPayment, setSelectedPayment] = useState<string>("")
+  const [deliveryFee] = useState(3) // 固定配送费
+  const [serviceFee] = useState(1) // 固定服务费
+  const [paymentMethods] = useState(getAvailablePaymentMethods())
+
   // 按商家分组购物车商品
   const itemsByMerchant = items.reduce((groups, item) => {
     const group = groups[item.merchantId] || {
@@ -30,26 +37,50 @@ export default function CheckoutPage() {
     return groups
   }, {} as Record<string, { merchantId: string, merchantName: string, items: typeof items }>)
 
-  // 如果购物车为空，重定向到首页
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push("/auth/login")
+    }
+  }, [isAuthenticated, router])
+
   useEffect(() => {
     if (items.length === 0) {
       router.push("/")
     }
-  }, [items, router])
+  }, [items.length, router])
 
-  const handleSubmitOrder = () => {
-    setLoading(true)
-    
-    // 模拟订单提交
-    setTimeout(() => {
-      toast.success("订单提交成功！")
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setIsLoading(true)
+
+    try {
+      const formData = new FormData(e.currentTarget)
+      const notes = formData.get("notes") as string
+
+      if (!selectedPayment) {
+        toast.error("请选择支付方式")
+        return
+      }
+
+      // 这里应该调用实际的创建订单API
+      // 为了演示，我们使用模拟延迟
+      await new Promise(resolve => setTimeout(resolve, 1000))
+
+      // 清空购物车
       clearCart()
-      router.push("/")
-      setLoading(false)
-    }, 1500)
+
+      // 跳转到支付页面
+      router.push(`/payment?amount=${totalAmount}&method=${selectedPayment}`)
+    } catch (error) {
+      toast.error("创建订单失败，请重试")
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  if (items.length === 0) {
+  const totalAmount = subtotal + deliveryFee + serviceFee
+
+  if (items.length === 0 || !isAuthenticated) {
     return null // 等待重定向
   }
 
@@ -73,26 +104,24 @@ export default function CheckoutPage() {
             </CardHeader>
             <CardContent className="space-y-6">
               {Object.values(itemsByMerchant).map(group => (
-                <div key={group.merchantId}>
-                  <div className="font-medium mb-3">{group.merchantName}</div>
-                  <div className="space-y-3">
+                <div key={group.merchantId} className="space-y-4">
+                  <div className="font-medium">{group.merchantName}</div>
+                  <div className="space-y-4">
                     {group.items.map(item => (
-                      <div key={item.id} className="flex items-center justify-between">
-                        <div className="flex items-center">
-                          {item.image && (
-                            <div className="h-12 w-12 rounded overflow-hidden mr-3">
-                              <img 
-                                src={item.image} 
-                                alt={item.name} 
-                                className="h-full w-full object-cover"
-                              />
-                            </div>
-                          )}
-                          <div>
-                            <div className="font-medium">{item.name}</div>
-                            <div className="text-sm text-muted-foreground">
-                              ¥{item.price.toFixed(2)} × {item.quantity}
-                            </div>
+                      <div key={item.id} className="flex items-start space-x-4">
+                        {item.image && (
+                          <div className="h-16 w-16 rounded overflow-hidden flex-shrink-0">
+                            <img 
+                              src={item.image} 
+                              alt={item.name} 
+                              className="h-full w-full object-cover"
+                            />
+                          </div>
+                        )}
+                        <div className="flex-1">
+                          <div className="font-medium">{item.name}</div>
+                          <div className="text-sm text-muted-foreground">
+                            ¥{item.price.toFixed(2)} × {item.quantity}
                           </div>
                         </div>
                         <div className="font-medium">
@@ -101,38 +130,29 @@ export default function CheckoutPage() {
                       </div>
                     ))}
                   </div>
-                  <Separator className="my-4" />
+                  <Separator />
                 </div>
               ))}
             </CardContent>
           </Card>
 
-          {/* 配送信息 */}
+          {/* 配送地址 */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">配送信息</CardTitle>
+              <CardTitle className="text-lg">配送地址</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-start">
-                <MapPin className="h-5 w-5 mr-2 text-muted-foreground flex-shrink-0 mt-0.5" />
-                <div>
-                  <div className="font-medium">配送地址</div>
-                  <div className="text-muted-foreground">{address}</div>
-                  <Button variant="link" className="h-auto p-0 text-blue-600">
-                    修改地址
-                  </Button>
-                </div>
-              </div>
-              
-              <div className="flex items-start">
-                <Clock className="h-5 w-5 mr-2 text-muted-foreground flex-shrink-0 mt-0.5" />
-                <div>
-                  <div className="font-medium">配送时间</div>
-                  <div className="text-muted-foreground">{deliveryTime}</div>
-                  <div className="text-sm text-muted-foreground">
-                    预计送达时间：30-45分钟
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div className="flex items-start gap-3">
+                  <MapPin className="w-5 h-5 text-muted-foreground mt-0.5" />
+                  <div>
+                    <p className="font-medium">校园公寓 3号楼 512室</p>
+                    <p className="text-sm text-muted-foreground">广东省广州市天河区校园大道1号</p>
                   </div>
                 </div>
+                <Button variant="outline" size="sm">
+                  修改地址
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -143,62 +163,83 @@ export default function CheckoutPage() {
               <CardTitle className="text-lg">支付方式</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center">
-                <CreditCard className="h-5 w-5 mr-2 text-muted-foreground" />
-                <div>
-                  <div className="font-medium">{paymentMethod}</div>
-                  <Button variant="link" className="h-auto p-0 text-blue-600">
-                    更换支付方式
-                  </Button>
-                </div>
-              </div>
+              <RadioGroup
+                value={selectedPayment}
+                onValueChange={setSelectedPayment}
+                className="space-y-3"
+              >
+                {paymentMethods.map(method => (
+                  <div
+                    key={method.id}
+                    className="flex items-center space-x-3 border rounded-lg p-4 cursor-pointer hover:border-primary transition-colors"
+                  >
+                    <RadioGroupItem value={method.id} id={method.id} />
+                    <Label htmlFor={method.id} className="flex items-center gap-2 cursor-pointer">
+                      <img src={method.icon} alt={method.name} className="h-6 w-6" />
+                      <span>{method.name}</span>
+                    </Label>
+                  </div>
+                ))}
+              </RadioGroup>
+            </CardContent>
+          </Card>
+
+          {/* 备注 */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">订单备注</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Input
+                name="notes"
+                placeholder="请输入订单备注（选填）"
+                disabled={isLoading}
+              />
             </CardContent>
           </Card>
         </div>
 
-        {/* 订单摘要 */}
+        {/* 订单金额 */}
         <div>
-          <Card className="sticky top-4">
+          <Card className="sticky top-6">
             <CardHeader>
-              <CardTitle className="text-lg">订单摘要</CardTitle>
+              <CardTitle className="text-lg">订单金额</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">商品小计</span>
-                <span>¥{subtotal.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">配送费</span>
-                <span>¥3.00</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">服务费</span>
-                <span>¥1.00</span>
-              </div>
-              <Separator />
-              <div className="flex justify-between font-medium">
-                <span>总计</span>
-                <span>¥{(subtotal + 4).toFixed(2)}</span>
-              </div>
-            </CardContent>
-            <CardFooter>
-              <div className="w-full space-y-3">
-                <Button 
-                  className="w-full" 
-                  size="lg"
-                  onClick={handleSubmitOrder}
-                  disabled={loading}
-                >
-                  {loading ? "处理中..." : "提交订单"}
-                </Button>
-                <div className="text-xs text-center text-muted-foreground">
-                  点击"提交订单"，表示您同意我们的
-                  <Link href="#" className="text-blue-600 hover:underline">服务条款</Link>
-                  和
-                  <Link href="#" className="text-blue-600 hover:underline">隐私政策</Link>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">商品总价</span>
+                  <span>¥{subtotal.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">配送费</span>
+                  <span>¥{deliveryFee.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">服务费</span>
+                  <span>¥{serviceFee.toFixed(2)}</span>
+                </div>
+                <Separator />
+                <div className="flex justify-between font-medium">
+                  <span>实付金额</span>
+                  <span className="text-lg">¥{totalAmount.toFixed(2)}</span>
                 </div>
               </div>
-            </CardFooter>
+              <Button 
+                className="w-full" 
+                size="lg"
+                disabled={isLoading}
+                onClick={() => {
+                  if (!selectedPayment) {
+                    toast.error("请选择支付方式")
+                    return
+                  }
+                  router.push(`/payment?amount=${totalAmount}&method=${selectedPayment}`)
+                }}
+              >
+                {isLoading ? "提交中..." : "提交订单"}
+              </Button>
+            </CardContent>
           </Card>
         </div>
       </div>

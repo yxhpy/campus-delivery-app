@@ -11,6 +11,8 @@ import {
   Menu,
   ChevronRight,
   MapPin,
+  X,
+  Star,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -21,8 +23,18 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
+  SheetClose,
 } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
+import { useUser } from "@/lib/user-context";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+
+interface Location {
+  id: number;
+  name: string;
+  address: string;
+}
 
 interface Restaurant {
   id: number;
@@ -32,6 +44,7 @@ interface Restaurant {
   deliveryTime: string;
   deliveryFee: string;
   tags: string[];
+  category: string;
 }
 
 interface Category {
@@ -42,6 +55,28 @@ interface Category {
 
 const CampusDeliveryApp: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState<number>(1);
+  const { isAuthenticated } = useUser();
+  const [isLocationSheetOpen, setIsLocationSheetOpen] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState<Location>({
+    id: 1,
+    name: "校园大道1号",
+    address: "广东省广州市天河区校园大道1号"
+  });
+  const [searchLocation, setSearchLocation] = useState("");
+
+  const locations: Location[] = [
+    { id: 1, name: "校园大道1号", address: "广东省广州市天河区校园大道1号" },
+    { id: 2, name: "学生宿舍", address: "广东省广州市天河区校园大道1号学生宿舍" },
+    { id: 3, name: "教学楼", address: "广东省广州市天河区校园大道1号教学楼" },
+    { id: 4, name: "图书馆", address: "广东省广州市天河区校园大道1号图书馆" },
+    { id: 5, name: "体育馆", address: "广东省广州市天河区校园大道1号体育馆" },
+  ];
+
+  const filteredLocations = locations.filter(
+    location => 
+      location.name.toLowerCase().includes(searchLocation.toLowerCase()) ||
+      location.address.toLowerCase().includes(searchLocation.toLowerCase())
+  );
 
   const categories: Category[] = [
     { id: 1, name: "全部", icon: <Home className="size-5" /> },
@@ -59,6 +94,7 @@ const CampusDeliveryApp: React.FC = () => {
       deliveryTime: "15-20分钟",
       deliveryFee: "¥3",
       tags: ["快餐", "米饭", "面食"],
+      category: "快餐"
     },
     {
       id: 2,
@@ -68,6 +104,7 @@ const CampusDeliveryApp: React.FC = () => {
       deliveryTime: "10-15分钟",
       deliveryFee: "¥5",
       tags: ["奶茶", "甜品"],
+      category: "奶茶"
     },
     {
       id: 3,
@@ -77,6 +114,7 @@ const CampusDeliveryApp: React.FC = () => {
       deliveryTime: "20-30分钟",
       deliveryFee: "¥4",
       tags: ["水果", "健康"],
+      category: "水果"
     },
     {
       id: 4,
@@ -86,13 +124,14 @@ const CampusDeliveryApp: React.FC = () => {
       deliveryTime: "15-25分钟",
       deliveryFee: "¥3",
       tags: ["零食", "日用品"],
+      category: "快餐"
     },
   ];
 
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-10 bg-background border-b border-border">
+      <header className="sticky top-0 z-50 bg-background border-b border-border">
         <div className="container py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -128,12 +167,18 @@ const CampusDeliveryApp: React.FC = () => {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon">
+              <Link 
+                href={isAuthenticated ? "/profile" : "/auth/login"}
+                className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-9 w-9"
+              >
                 <User className="size-5" />
-              </Button>
-              <Button variant="ghost" size="icon">
+              </Link>
+              <Link 
+                href="/orders"
+                className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-9 w-9"
+              >
                 <ShoppingBag className="size-5" />
-              </Button>
+              </Link>
             </div>
           </div>
         </div>
@@ -143,11 +188,54 @@ const CampusDeliveryApp: React.FC = () => {
       <main className="container py-4">
         {/* Location and Search */}
         <div className="mb-6">
-          <div className="flex items-center gap-1 mb-3">
-            <MapPin className="size-4 text-muted-foreground" />
-            <span className="text-sm font-medium">校园大道1号</span>
-            <ChevronRight className="size-4 text-muted-foreground" />
-          </div>
+          <Sheet open={isLocationSheetOpen} onOpenChange={setIsLocationSheetOpen}>
+            <SheetTrigger asChild>
+              <button className="flex items-center gap-1 mb-3 hover:text-primary transition-colors">
+                <MapPin className="size-4 text-muted-foreground" />
+                <span className="text-sm font-medium">{selectedLocation.name}</span>
+                <ChevronRight className="size-4 text-muted-foreground" />
+              </button>
+            </SheetTrigger>
+            <SheetContent side="bottom" className="h-[80vh]">
+              <SheetHeader>
+                <SheetTitle>选择收货地址</SheetTitle>
+              </SheetHeader>
+              <div className="mt-4">
+                <div className="relative mb-4">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                  <Input
+                    placeholder="搜索地址"
+                    className="pl-10"
+                    value={searchLocation}
+                    onChange={(e) => setSearchLocation(e.target.value)}
+                  />
+                  {searchLocation && (
+                    <button
+                      className="absolute right-3 top-1/2 -translate-y-1/2"
+                      onClick={() => setSearchLocation("")}
+                    >
+                      <X className="size-4 text-muted-foreground" />
+                    </button>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  {filteredLocations.map((location) => (
+                    <button
+                      key={location.id}
+                      className="w-full p-3 text-left rounded-lg hover:bg-accent transition-colors"
+                      onClick={() => {
+                        setSelectedLocation(location);
+                        setIsLocationSheetOpen(false);
+                      }}
+                    >
+                      <div className="font-medium">{location.name}</div>
+                      <div className="text-sm text-muted-foreground">{location.address}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </SheetContent>
+          </Sheet>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
             <Input
@@ -186,51 +274,44 @@ const CampusDeliveryApp: React.FC = () => {
         </div>
 
         {/* Restaurants */}
-        <div>
-          <h2 className="text-lg font-bold mb-4">附近商家</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {restaurants.map((restaurant) => (
-              <Link 
-                key={restaurant.id} 
-                href={`/merchant/${restaurant.id}`}
-                className="block border border-border rounded-lg overflow-hidden hover:shadow-md transition-shadow"
-              >
-                <div className="aspect-video relative overflow-hidden">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {restaurants
+            .filter(restaurant => activeCategory === 1 || restaurant.category === categories[activeCategory - 1].name)
+            .map((restaurant) => (
+            <Link key={restaurant.id} href={`/merchant/${restaurant.id}`}>
+              <Card className="overflow-hidden hover:shadow-lg transition-shadow">
+                <div className="aspect-video relative">
                   <img
                     src={restaurant.image}
                     alt={restaurant.name}
-                    className="w-full h-full object-cover"
+                    className="object-cover w-full h-full"
                   />
                 </div>
-                <div className="p-4">
-                  <div className="flex justify-between items-start">
+                <CardContent className="p-4">
+                  <div className="flex justify-between items-start mb-2">
                     <h3 className="font-bold">{restaurant.name}</h3>
-                    <div className="bg-primary/10 text-primary px-2 py-0.5 rounded text-sm">
-                      {restaurant.rating}
+                    <div className="flex items-center">
+                      <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                      <span className="ml-1 text-sm">{restaurant.rating}</span>
                     </div>
                   </div>
-                  <div className="flex gap-2 mt-2">
-                    <span className="text-sm text-muted-foreground">
-                      {restaurant.deliveryTime}
-                    </span>
-                    <span className="text-sm text-muted-foreground">
-                      配送费 {restaurant.deliveryFee}
-                    </span>
+                  <div className="flex items-center text-sm text-muted-foreground">
+                    <Clock className="w-4 h-4 mr-1" />
+                    <span>{restaurant.deliveryTime}</span>
+                    <span className="mx-2">•</span>
+                    <span>{restaurant.deliveryFee}</span>
                   </div>
-                  <div className="flex gap-2 mt-2">
-                    {restaurant.tags.map((tag, index) => (
-                      <span
-                        key={index}
-                        className="bg-muted text-muted-foreground text-xs px-2 py-0.5 rounded"
-                      >
+                  <div className="mt-2 flex flex-wrap gap-1">
+                    {restaurant.tags.map((tag) => (
+                      <Badge key={tag} variant="secondary" className="text-xs">
                         {tag}
-                      </span>
+                      </Badge>
                     ))}
                   </div>
-                </div>
-              </Link>
-            ))}
-          </div>
+                </CardContent>
+              </Card>
+            </Link>
+          ))}
         </div>
       </main>
     </div>
