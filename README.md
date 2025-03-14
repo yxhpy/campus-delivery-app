@@ -8,11 +8,6 @@
 
 - 首页展示（商家列表）
 - 商家详情页面（包含商品列表）
-- 商品详情页面
-- 购物车功能
-- 用户注册和登录
-- 用户个人资料页面
-- 结算页面
 
 ## 技术栈
 
@@ -30,35 +25,22 @@
 │   ├── globals.css         # 全局样式
 │   ├── layout.tsx          # 应用布局
 │   ├── page.tsx            # 首页
-│   ├── auth/               # 认证相关页面
-│   │   ├── login/          # 登录页面
-│   │   └── register/       # 注册页面
-│   ├── checkout/           # 结算页面
-│   ├── profile/            # 用户个人资料页面
-│   ├── product/            # 商品相关页面
-│   │   └── [id]/           # 商品详情页（动态路由）
 │   └── merchant/           # 商家相关页面
 │       └── [id]/           # 商家详情页（动态路由）
 │           └── page.tsx    # 商家详情页面
 ├── components/             # 组件目录
 │   ├── CampusDeliveryApp.tsx  # 首页主组件
 │   ├── MerchantDetailPage.tsx # 商家详情页组件
-│   ├── ProductDetailPage.tsx  # 商品详情页组件
-│   ├── CartSheet.tsx          # 购物车抽屉组件
-│   ├── UserMenu.tsx           # 用户菜单组件
 │   └── ui/                 # UI组件
 │       ├── badge.tsx       # 徽章组件
 │       ├── button.tsx      # 按钮组件
 │       ├── card.tsx        # 卡片组件
 │       ├── input.tsx       # 输入框组件
-│       ├── label.tsx       # 标签组件
 │       ├── separator.tsx   # 分隔线组件
 │       ├── sheet.tsx       # 抽屉组件
 │       └── table.tsx       # 表格组件
 ├── lib/                    # 工具库
-│   ├── utils.ts            # 工具函数
-│   ├── cart-context.tsx    # 购物车上下文
-│   └── user-context.tsx    # 用户上下文
+│   └── utils.ts            # 工具函数
 ├── public/                 # 静态资源目录
 ├── .next/                  # Next.js构建目录
 ├── node_modules/           # 依赖包
@@ -68,9 +50,6 @@
 ├── tailwind.config.js      # Tailwind配置
 ├── tsconfig.json           # TypeScript配置
 ├── next-env.d.ts           # Next.js类型声明
-├── PROGRESS_REPORT.md      # 进度报告
-├── PROJECT_STRUCTURE.md    # 项目结构文档
-├── ROADMAP.md              # 开发路线图
 └── TODO.md                 # 待办事项列表
 ```
 
@@ -142,36 +121,9 @@ interface Product {
 }
 ```
 
-### 用户(User)
-
-```typescript
-interface User {
-  id: string
-  username: string
-  email: string
-  name?: string
-  phone?: string
-  address?: string[]
-}
-```
-
-### 购物车(Cart)
-
-```typescript
-interface CartItem {
-  id: string
-  productId: string
-  merchantId: string
-  name: string
-  price: number
-  quantity: number
-  image?: string
-}
-```
-
 ## 待完成功能
 
-详见 [TODO.md](./TODO.md) 文件和 [ROADMAP.md](./ROADMAP.md) 文件。
+详见 [TODO.md](./TODO.md) 文件。
 
 ## 贡献指南
 
@@ -183,4 +135,4 @@ interface CartItem {
 
 ## 许可证
 
-[MIT](LICENSE)
+[MIT](LICENSE) 
