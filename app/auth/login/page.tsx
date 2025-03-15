@@ -24,19 +24,17 @@ export default function LoginPage() {
       const username = formData.get("username") as string
       const password = formData.get("password") as string
 
-      // 这里应该调用实际的登录API
-      // 为了演示，我们使用模拟登录
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      await login({
-        id: "1",
-        username: username,
-        email: `${username}@example.com`,
-      })
+      // 使用用户名作为邮箱（在实际应用中可能需要调整）
+      const email = username.includes('@') ? username : `${username}@example.com`
+      
+      // 正确调用login函数，传递email和password
+      await login(email, password)
 
       toast.success("登录成功")
       router.push("/")
     } catch (error) {
       toast.error("登录失败，请重试")
+      console.error("登录错误:", error)
     } finally {
       setIsLoading(false)
     }

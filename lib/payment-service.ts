@@ -24,6 +24,9 @@ export interface PaymentResponse {
   paymentMethod: string;
 }
 
+// 支付方式类型
+export type PaymentMethodType = 'wechat' | 'alipay' | 'campus_card' | 'credit_card';
+
 // 模拟支付处理
 export async function processPayment(request: PaymentRequest): Promise<PaymentResponse> {
   // 模拟网络延迟
@@ -42,16 +45,19 @@ export async function processPayment(request: PaymentRequest): Promise<PaymentRe
     };
   } else {
     // 模拟支付失败
-    const errorMessages = {
+    const errorMessages: Record<PaymentMethodType, string> = {
       'wechat': '微信支付失败，请稍后重试',
       'alipay': '支付宝支付失败，请检查账户余额',
       'campus_card': '校园卡余额不足',
       'credit_card': '信用卡支付被拒绝，请联系发卡行'
     };
     
+    const method = request.method as PaymentMethodType;
+    const errorMessage = errorMessages[method] || '支付失败，请稍后重试';
+    
     return {
       success: false,
-      message: errorMessages[request.method] || '支付失败，请稍后重试',
+      message: errorMessage,
       timestamp: new Date().toISOString(),
       paymentMethod: request.method
     };
@@ -86,7 +92,7 @@ export function savePaymentPreference(method: string): void {
 // 获取用户支付偏好
 export function getPaymentPreference(): string | null {
   if (typeof window !== 'undefined') {
-    const saved = localStorage.getItem('preferredPaymentMethod') as string;
+    const saved = localStorage.getItem('preferredPaymentMethod');
     return saved || null;
   }
   return null;
@@ -113,11 +119,22 @@ export async function createPaymentOrder(params: {
 
 // 查询支付状态
 export async function queryPaymentStatus(paymentId: string) {
+  console.log('查询支付状态:', paymentId);
+  
   // 这里应该调用实际的支付API查询状态
   // 为了演示，我们返回模拟数据
-  return {
+  
+  // 模拟网络延迟
+  console.log('模拟支付查询延迟...');
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  
+  // 始终返回成功状态，确保订单能被创建
+  const result = {
     status: "success",
     paymentId,
     paidAt: new Date().toISOString()
-  }
+  };
+  
+  console.log('支付状态查询结果:', JSON.stringify(result));
+  return result;
 } 

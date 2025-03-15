@@ -11,18 +11,32 @@ import { useUser } from "@/lib/user-context"
 import { toast } from "sonner"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
-import { MapPin, Phone, Mail, User, Lock, CreditCard, LogOut, ShoppingBag } from "lucide-react"
+import { MapPin, Phone, Mail, User, Lock, CreditCard, LogOut, ShoppingBag, Plus, Edit, Trash2 } from "lucide-react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import AddressForm from "@/components/AddressForm"
+import { Address, addAddress, deleteAddress, getAddresses, setDefaultAddress, updateAddress } from "@/lib/address-service"
 
 export default function ProfilePage() {
   const router = useRouter()
   const { user, isAuthenticated, logout } = useUser()
   const [isLoading, setIsLoading] = useState(false)
+  const [addresses, setAddresses] = useState<Address[]>([])
+  const [isAddressDialogOpen, setIsAddressDialogOpen] = useState(false)
+  const [currentAddress, setCurrentAddress] = useState<Address | undefined>(undefined)
+  const [isAddressSubmitting, setIsAddressSubmitting] = useState(false)
 
   useEffect(() => {
     if (!isAuthenticated) {
       router.push("/auth/login")
     }
   }, [isAuthenticated, router])
+
+  // 加载地址列表
+  useEffect(() => {
+    if (isAuthenticated) {
+      setAddresses(getAddresses())
+    }
+  }, [isAuthenticated])
 
   const handleLogout = async () => {
     try {
@@ -54,6 +68,71 @@ export default function ProfilePage() {
       setIsLoading(false)
       toast.success("密码已更新")
     }, 1000)
+  }
+
+  // 添加或更新地址
+  const handleAddressSubmit = (addressData: Omit<Address, 'id'>) => {
+    setIsAddressSubmitting(true)
+
+    try {
+      if (currentAddress) {
+        // 更新地址
+        const updated = updateAddress({
+          ...addressData,
+          id: currentAddress.id
+        })
+        
+        if (updated) {
+          toast.success("地址已更新")
+          setAddresses(getAddresses())
+        } else {
+          toast.error("更新地址失败")
+        }
+      } else {
+        // 添加新地址
+        const newAddress = addAddress(addressData)
+        setAddresses(getAddresses())
+        toast.success("地址已添加")
+      }
+      
+      // 关闭对话框
+      setIsAddressDialogOpen(false)
+      setCurrentAddress(undefined)
+    } catch (error) {
+      toast.error("操作失败，请重试")
+    } finally {
+      setIsAddressSubmitting(false)
+    }
+  }
+
+  // 编辑地址
+  const handleEditAddress = (address: Address) => {
+    setCurrentAddress(address)
+    setIsAddressDialogOpen(true)
+  }
+
+  // 删除地址
+  const handleDeleteAddress = (id: string) => {
+    if (window.confirm("确定要删除这个地址吗？")) {
+      const success = deleteAddress(id)
+      if (success) {
+        toast.success("地址已删除")
+        setAddresses(getAddresses())
+      } else {
+        toast.error("删除地址失败")
+      }
+    }
+  }
+
+  // 设置默认地址
+  const handleSetDefaultAddress = (id: string) => {
+    const success = setDefaultAddress(id)
+    if (success) {
+      toast.success("已设为默认地址")
+      setAddresses(getAddresses())
+    } else {
+      toast.error("设置默认地址失败")
+    }
   }
 
   if (!isAuthenticated || !user) {
@@ -222,33 +301,95 @@ export default function ProfilePage() {
             {/* 收货地址 */}
             <TabsContent value="address">
               <Card>
-                <CardHeader>
-                  <CardTitle>收货地址</CardTitle>
-                  <CardDescription>
-                    管理您的收货地址
-                  </CardDescription>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle>收货地址</CardTitle>
+                    <CardDescription>
+                      管理您的收货地址
+                    </CardDescription>
+                  </div>
+                  <Dialog open={isAddressDialogOpen} onOpenChange={setIsAddressDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button 
+                        onClick={() => setCurrentAddress(undefined)}
+                        className="flex items-center"
+                      >
+                        <Plus className="w-4 h-4 mr-1" />
+                        添加新地址
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[500px]">
+                      <DialogHeader>
+                        <DialogTitle>
+                          {currentAddress ? "编辑地址" : "添加新地址"}
+                        </DialogTitle>
+                      </DialogHeader>
+                      <AddressForm
+                        address={currentAddress}
+                        onSubmit={handleAddressSubmit}
+                        onCancel={() => setIsAddressDialogOpen(false)}
+                        isSubmitting={isAddressSubmitting}
+                      />
+                    </DialogContent>
+                  </Dialog>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="border rounded-lg p-4">
-                    <div className="flex justify-between items-start">
-                      <div className="space-y-1">
-                        <div className="font-medium">校园公寓 3号楼 512室</div>
-                        <div className="text-sm text-muted-foreground">广东省广州市天河区校园大道1号</div>
-                        <div className="text-sm">张三 (13800138000)</div>
-                        <div className="inline-flex items-center text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
-                          <MapPin className="w-3 h-3 mr-1" />
-                          默认地址
+                  {addresses.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <MapPin className="mx-auto h-8 w-8 mb-2 opacity-50" />
+                      <p>您还没有添加收货地址</p>
+                      <p className="text-sm">添加地址以便更快地完成订单</p>
+                    </div>
+                  ) : (
+                    addresses.map((address) => (
+                      <div key={address.id} className="border rounded-lg p-4">
+                        <div className="flex justify-between items-start">
+                          <div className="space-y-1">
+                            <div className="font-medium">{address.detail}</div>
+                            <div className="text-sm text-muted-foreground">
+                              {address.province}{address.city}{address.district}
+                            </div>
+                            <div className="text-sm">
+                              {address.name} ({address.phone})
+                            </div>
+                            {address.isDefault && (
+                              <div className="inline-flex items-center text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
+                                <MapPin className="w-3 h-3 mr-1" />
+                                默认地址
+                              </div>
+                            )}
+                          </div>
+                          <div className="space-x-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handleEditAddress(address)}
+                            >
+                              <Edit className="w-3 h-3 mr-1" />
+                              编辑
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handleDeleteAddress(address.id)}
+                            >
+                              <Trash2 className="w-3 h-3 mr-1" />
+                              删除
+                            </Button>
+                            {!address.isDefault && (
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => handleSetDefaultAddress(address.id)}
+                              >
+                                设为默认
+                              </Button>
+                            )}
+                          </div>
                         </div>
                       </div>
-                      <div className="space-x-2">
-                        <Button variant="outline" size="sm">编辑</Button>
-                        <Button variant="outline" size="sm">删除</Button>
-                      </div>
-                    </div>
-                  </div>
-                  <Button variant="outline" className="w-full">
-                    添加新地址
-                  </Button>
+                    ))
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>

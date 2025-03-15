@@ -12,7 +12,7 @@ import { toast } from "sonner"
 
 export default function RegisterPage() {
   const router = useRouter()
-  const { login } = useUser()
+  const { register } = useUser()
   const [isLoading, setIsLoading] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -28,22 +28,18 @@ export default function RegisterPage() {
 
       if (password !== confirmPassword) {
         toast.error("两次输入的密码不一致")
+        setIsLoading(false)
         return
       }
 
-      // 这里应该调用实际的注册API
-      // 为了演示，我们使用模拟注册
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      await login({
-        id: "1",
-        username: username,
-        email: email,
-      })
+      // 正确调用register函数，传递username、email和password
+      await register(username, email, password)
 
       toast.success("注册成功")
       router.push("/")
     } catch (error) {
       toast.error("注册失败，请重试")
+      console.error("注册错误:", error)
     } finally {
       setIsLoading(false)
     }

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -8,128 +8,39 @@ import { Separator } from "@/components/ui/separator"
 import { useUser } from "@/lib/user-context"
 import Link from "next/link"
 import { ArrowLeft, Clock, Package, CheckCircle, AlertCircle, MapPin, Phone, Calendar } from "lucide-react"
+import { getOrderById, Order, OrderStatus } from "@/lib/order-service"
+import { toast } from "sonner"
 
 // 订单状态类型
-type OrderStatus = "pending" | "processing" | "delivered" | "cancelled"
+// type OrderStatus = "pending" | "processing" | "delivered" | "cancelled"
 
 // 订单项类型
-interface OrderItem {
-  id: string
-  name: string
-  price: number
-  quantity: number
-  image?: string
-}
+// interface OrderItem {
+//   id: string
+//   name: string
+//   price: number
+//   quantity: number
+//   image?: string
+// }
 
 // 订单类型
-interface Order {
-  id: string
-  merchantName: string
-  merchantId: string
-  items: OrderItem[]
-  totalAmount: number
-  status: OrderStatus
-  createdAt: string
-  updatedAt: string
-  deliveryAddress: string
-  estimatedDeliveryTime?: string
-  paymentMethod: string
-  deliveryFee: number
-  serviceFee: number
-  contactPhone?: string
-  deliveryNotes?: string
-}
-
-// 模拟订单数据
-const mockOrders: Record<string, Order> = {
-  "order-001": {
-    id: "order-001",
-    merchantName: "学生食堂",
-    merchantId: "1",
-    items: [
-      {
-        id: "item-001",
-        name: "红烧牛肉面",
-        price: 15,
-        quantity: 1,
-        image: "https://images.pexels.com/photos/1279330/pexels-photo-1279330.jpeg?auto=compress&cs=tinysrgb&w=800"
-      },
-      {
-        id: "item-002",
-        name: "蒸饺",
-        price: 8,
-        quantity: 2,
-        image: "https://images.pexels.com/photos/5409010/pexels-photo-5409010.jpeg?auto=compress&cs=tinysrgb&w=800"
-      }
-    ],
-    totalAmount: 31,
-    status: "delivered",
-    createdAt: "2024-03-10T14:30:00Z",
-    updatedAt: "2024-03-10T15:15:00Z",
-    deliveryAddress: "校园公寓 3号楼 512室",
-    estimatedDeliveryTime: "30-45分钟",
-    paymentMethod: "微信支付",
-    deliveryFee: 3,
-    serviceFee: 1,
-    contactPhone: "138****1234",
-    deliveryNotes: "请放在门口，谢谢"
-  },
-  "order-002": {
-    id: "order-002",
-    merchantName: "奶茶店",
-    merchantId: "2",
-    items: [
-      {
-        id: "item-003",
-        name: "珍珠奶茶",
-        price: 12,
-        quantity: 2,
-        image: "https://images.pexels.com/photos/3551717/pexels-photo-3551717.jpeg?auto=compress&cs=tinysrgb&w=800"
-      }
-    ],
-    totalAmount: 24,
-    status: "processing",
-    createdAt: "2024-03-13T10:15:00Z",
-    updatedAt: "2024-03-13T10:20:00Z",
-    deliveryAddress: "校园公寓 3号楼 512室",
-    estimatedDeliveryTime: "15-30分钟",
-    paymentMethod: "支付宝",
-    deliveryFee: 5,
-    serviceFee: 1,
-    contactPhone: "138****1234"
-  },
-  "order-003": {
-    id: "order-003",
-    merchantName: "便利店",
-    merchantId: "4",
-    items: [
-      {
-        id: "item-004",
-        name: "薯片",
-        price: 6,
-        quantity: 1,
-        image: "https://images.pexels.com/photos/1893555/pexels-photo-1893555.jpeg?auto=compress&cs=tinysrgb&w=800"
-      },
-      {
-        id: "item-005",
-        name: "矿泉水",
-        price: 2,
-        quantity: 2,
-        image: "https://images.pexels.com/photos/327090/pexels-photo-327090.jpeg?auto=compress&cs=tinysrgb&w=800"
-      }
-    ],
-    totalAmount: 10,
-    status: "pending",
-    createdAt: "2024-03-14T09:00:00Z",
-    updatedAt: "2024-03-14T09:00:00Z",
-    deliveryAddress: "校园公寓 3号楼 512室",
-    estimatedDeliveryTime: "20-35分钟",
-    paymentMethod: "校园卡",
-    deliveryFee: 3,
-    serviceFee: 1,
-    contactPhone: "138****1234"
-  }
-}
+// interface Order {
+//   id: string
+//   merchantName: string
+//   merchantId: string
+//   items: OrderItem[]
+//   totalAmount: number
+//   status: OrderStatus
+//   createdAt: string
+//   updatedAt: string
+//   deliveryAddress: string
+//   estimatedDeliveryTime?: string
+//   paymentMethod: string
+//   deliveryFee: number
+//   serviceFee: number
+//   contactPhone?: string
+//   deliveryNotes?: string
+// }
 
 // 获取状态图标
 const getStatusIcon = (status: OrderStatus) => {
@@ -192,19 +103,68 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
       return
     }
     
-    // 模拟从API获取订单数据
+    // 从本地存储获取订单数据
     setLoading(true)
-    setTimeout(() => {
-      const foundOrder = mockOrders[params.id]
+    try {
+      console.log('获取订单详情，ID:', params.id);
+      const foundOrder = getOrderById(params.id)
+      console.log('查询结果:', foundOrder ? '找到订单' : '未找到订单');
+      
       if (foundOrder) {
         setOrder(foundOrder)
       } else {
         // 如果找不到订单，重定向到订单列表页
-        router.push("/orders")
+        toast.error('未找到订单信息')
+        setTimeout(() => {
+          router.push("/orders")
+        }, 1000)
       }
+    } catch (error) {
+      console.error('获取订单详情失败:', error)
+      toast.error('获取订单详情失败')
+      setTimeout(() => {
+        router.push("/orders")
+      }, 1000)
+    } finally {
       setLoading(false)
-    }, 500)
+    }
   }, [isAuthenticated, params.id, router])
+
+  // 添加刷新订单的函数
+  const refreshOrder = useCallback(() => {
+    if (!isAuthenticated || !params.id) return;
+    
+    setLoading(true);
+    try {
+      const foundOrder = getOrderById(params.id);
+      if (foundOrder) {
+        setOrder(foundOrder);
+      } else {
+        toast.error('订单信息已更新，请返回订单列表');
+      }
+    } catch (error) {
+      console.error('刷新订单详情失败:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [isAuthenticated, params.id]);
+
+  // 页面可见性变化时刷新订单
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        refreshOrder();
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [isAuthenticated, refreshOrder]);
 
   if (!isAuthenticated || loading) {
     return (

@@ -225,20 +225,16 @@ export default function CheckoutPage() {
                   <span className="text-lg">¥{totalAmount.toFixed(2)}</span>
                 </div>
               </div>
-              <Button 
-                className="w-full" 
-                size="lg"
-                disabled={isLoading}
-                onClick={() => {
-                  if (!selectedPayment) {
-                    toast.error("请选择支付方式")
-                    return
-                  }
-                  router.push(`/payment?amount=${totalAmount}&method=${selectedPayment}`)
-                }}
-              >
-                {isLoading ? "提交中..." : "提交订单"}
-              </Button>
+              <form onSubmit={handleSubmit}>
+                <Button 
+                  className="w-full" 
+                  size="lg"
+                  disabled={isLoading}
+                  type="submit"
+                >
+                  {isLoading ? "提交中..." : "提交订单"}
+                </Button>
+              </form>
             </CardContent>
           </Card>
         </div>
