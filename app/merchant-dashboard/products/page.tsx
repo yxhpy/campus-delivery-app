@@ -95,10 +95,13 @@ export default function MerchantProductsPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [categoryFilter, setCategoryFilter] = useState<string>("all")
+<<<<<<< HEAD
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [productToDelete, setProductToDelete] = useState<string | null>(null)
+=======
+>>>>>>> 86379cbbdc7977370070e2dad05faaf66f1df083
 
   // 检查用户是否为商家
   useEffect(() => {
@@ -143,6 +146,7 @@ export default function MerchantProductsPage() {
     toast.success(`商品状态已更新为${statusText[newStatus]}`)
   }
 
+<<<<<<< HEAD
   // 查看商品详情
   const viewProductDetail = (product: Product) => {
     setSelectedProduct(product)
@@ -162,6 +166,13 @@ export default function MerchantProductsPage() {
       setProductToDelete(null)
       setIsDeleteModalOpen(false)
       toast.success("商品已删除")
+=======
+  // 删除商品
+  const handleDeleteProduct = (productId: string) => {
+    if (confirm('确定要删除这个商品吗？')) {
+      setProducts(prev => prev.filter(product => product.id !== productId))
+      toast.success('商品已删除')
+>>>>>>> 86379cbbdc7977370070e2dad05faaf66f1df083
     }
   }
 
@@ -252,18 +263,27 @@ export default function MerchantProductsPage() {
                 </SelectContent>
               </Select>
               
+<<<<<<< HEAD
               <Button onClick={() => toast.info("添加商品功能正在开发中")}>
+=======
+              <Button onClick={() => router.push("/merchant-dashboard/products/new")}>
+>>>>>>> 86379cbbdc7977370070e2dad05faaf66f1df083
                 <Plus className="h-4 w-4 mr-1" />
                 添加商品
               </Button>
             </div>
           </div>
 
+<<<<<<< HEAD
           <div className="rounded-md border">
+=======
+          <div className="border rounded-lg">
+>>>>>>> 86379cbbdc7977370070e2dad05faaf66f1df083
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>商品名称</TableHead>
+<<<<<<< HEAD
                   <TableHead>价格</TableHead>
                   <TableHead>分类</TableHead>
                   <TableHead>库存</TableHead>
@@ -334,11 +354,86 @@ export default function MerchantProductsPage() {
                     </TableCell>
                   </TableRow>
                 )}
+=======
+                  <TableHead>分类</TableHead>
+                  <TableHead>价格</TableHead>
+                  <TableHead>库存</TableHead>
+                  <TableHead>状态</TableHead>
+                  <TableHead>操作</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredProducts.map((product) => (
+                  <TableRow key={product.id}>
+                    <TableCell>
+                      <div className="flex items-center space-x-3">
+                        <img 
+                          src={product.image} 
+                          alt={product.name} 
+                          className="h-10 w-10 rounded-lg object-cover"
+                        />
+                        <div>
+                          <div className="font-medium">{product.name}</div>
+                          <div className="text-sm text-muted-foreground">{product.description}</div>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>{product.category}</TableCell>
+                    <TableCell>¥{product.price}</TableCell>
+                    <TableCell>{product.stock}</TableCell>
+                    <TableCell>{renderStatusBadge(product.status)}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center space-x-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => router.push(`/merchant-dashboard/products/${product.id}`)}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => router.push(`/merchant-dashboard/products/${product.id}/edit`)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDeleteProduct(product.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                        {product.status !== 'active' && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleStatusUpdate(product.id, 'active')}
+                          >
+                            <CheckCircle className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {product.status !== 'hidden' && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleStatusUpdate(product.id, 'hidden')}
+                          >
+                            <XCircle className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+>>>>>>> 86379cbbdc7977370070e2dad05faaf66f1df083
               </TableBody>
             </Table>
           </div>
         </CardContent>
       </Card>
+<<<<<<< HEAD
 
       {/* 商品详情对话框 */}
       {selectedProduct && (
@@ -474,3 +569,8 @@ export default function MerchantProductsPage() {
     </div>
   )
 } 
+=======
+    </div>
+  )
+}
+>>>>>>> 86379cbbdc7977370070e2dad05faaf66f1df083
