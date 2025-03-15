@@ -18,6 +18,21 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [userType, setUserType] = useState("normal")
 
+  // 根据用户角色重定向到相应页面
+  const redirectBasedOnRole = (role: string) => {
+    switch (role) {
+      case "admin":
+        router.push("/admin");
+        break;
+      case "merchant":
+        router.push("/merchant-dashboard");
+        break;
+      default:
+        router.push("/");
+        break;
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setIsLoading(true)
@@ -31,10 +46,11 @@ export default function LoginPage() {
       const email = username.includes('@') ? username : `${username}@example.com`
       
       // 正确调用login函数，传递email和password
-      await login(email, password)
+      const userData = await login(email, password)
 
       toast.success("登录成功")
-      router.push("/")
+      // 根据用户角色重定向
+      redirectBasedOnRole(userData.role)
     } catch (error) {
       toast.error("登录失败，请重试")
       console.error("登录错误:", error)
@@ -67,9 +83,10 @@ export default function LoginPage() {
           password = "password";
       }
       
-      await login(email, password);
+      const userData = await login(email, password);
       toast.success("登录成功");
-      router.push("/");
+      // 根据用户角色重定向
+      redirectBasedOnRole(userData.role);
     } catch (error) {
       toast.error("登录失败，请重试");
       console.error("登录错误:", error);

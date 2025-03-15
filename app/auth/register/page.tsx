@@ -15,6 +15,21 @@ export default function RegisterPage() {
   const { register } = useUser()
   const [isLoading, setIsLoading] = useState(false)
 
+  // 根据用户角色重定向到相应页面
+  const redirectBasedOnRole = (role: string) => {
+    switch (role) {
+      case "admin":
+        router.push("/admin");
+        break;
+      case "merchant":
+        router.push("/merchant-dashboard");
+        break;
+      default:
+        router.push("/");
+        break;
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setIsLoading(true)
@@ -33,10 +48,11 @@ export default function RegisterPage() {
       }
 
       // 正确调用register函数，传递username、email和password
-      await register(username, email, password)
+      const userData = await register(username, email, password)
 
       toast.success("注册成功")
-      router.push("/")
+      // 根据用户角色重定向
+      redirectBasedOnRole(userData.role)
     } catch (error) {
       toast.error("注册失败，请重试")
       console.error("注册错误:", error)

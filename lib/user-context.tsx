@@ -14,8 +14,8 @@ export interface User {
 interface UserContextType {
   user: User | null
   loading: boolean
-  login: (email: string, password: string) => Promise<void>
-  register: (username: string, email: string, password: string) => Promise<void>
+  login: (email: string, password: string) => Promise<User>
+  register: (username: string, email: string, password: string) => Promise<User>
   logout: () => void
   updateUserRole: (userId: string, role: 'user' | 'merchant' | 'admin') => Promise<void>
   updateUserStatus: (userId: string, status: 'active' | 'inactive' | 'banned') => Promise<void>
@@ -48,7 +48,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     setLoading(true)
     
     // 模拟API调用
-    return new Promise<void>((resolve, reject) => {
+    return new Promise<User>((resolve, reject) => {
       setTimeout(() => {
         // 简单验证
         if (email === 'test@example.com' && password === 'password') {
@@ -64,7 +64,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           setUser(userData)
           localStorage.setItem('user', JSON.stringify(userData))
           setLoading(false)
-          resolve()
+          resolve(userData)
         } else if (email === 'admin@example.com' && password === 'admin123') {
           const userData: User = {
             id: 'admin-001',
@@ -78,7 +78,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           setUser(userData)
           localStorage.setItem('user', JSON.stringify(userData))
           setLoading(false)
-          resolve()
+          resolve(userData)
         } else if (email === 'merchant@example.com' && password === 'merchant123') {
           const userData: User = {
             id: 'merchant-001',
@@ -92,7 +92,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           setUser(userData)
           localStorage.setItem('user', JSON.stringify(userData))
           setLoading(false)
-          resolve()
+          resolve(userData)
         } else {
           setLoading(false)
           reject(new Error('邮箱或密码不正确'))
@@ -106,7 +106,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     setLoading(true)
     
     // 模拟API调用
-    return new Promise<void>((resolve, reject) => {
+    return new Promise<User>((resolve, reject) => {
       setTimeout(() => {
         // 简单验证
         if (email && password && username) {
@@ -121,7 +121,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           setUser(userData)
           localStorage.setItem('user', JSON.stringify(userData))
           setLoading(false)
-          resolve()
+          resolve(userData)
         } else {
           setLoading(false)
           reject(new Error('请填写所有必填字段'))
