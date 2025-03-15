@@ -1,22 +1,19 @@
-"use client"
+"use client";
 
-import { createContext, useContext, useEffect, useState } from "react"
+import React, { createContext, useContext, useEffect, useState } from "react"
 
 interface WishlistItem {
   id: string
   name: string
   price: number
   image: string
-  merchantId: string
-  merchantName: string
 }
 
 interface WishlistContextType {
   items: WishlistItem[]
   addItem: (item: WishlistItem) => void
-  removeItem: (itemId: string) => void
-  isInWishlist: (itemId: string) => boolean
-  clearWishlist: () => void
+  removeItem: (id: string) => void
+  isInWishlist: (id: string) => boolean
 }
 
 const WishlistContext = createContext<WishlistContextType | undefined>(undefined)
@@ -24,7 +21,6 @@ const WishlistContext = createContext<WishlistContextType | undefined>(undefined
 export function WishlistProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<WishlistItem[]>([])
 
-  // 从本地存储加载收藏夹数据
   useEffect(() => {
     const savedItems = localStorage.getItem("wishlist")
     if (savedItems) {
@@ -32,42 +28,24 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  // 保存收藏夹数据到本地存储
   useEffect(() => {
     localStorage.setItem("wishlist", JSON.stringify(items))
   }, [items])
 
   const addItem = (item: WishlistItem) => {
-    setItems(prev => {
-      if (!prev.some(i => i.id === item.id)) {
-        return [...prev, item]
-      }
-      return prev
-    })
+    setItems((prev) => [...prev, item])
   }
 
-  const removeItem = (itemId: string) => {
-    setItems(prev => prev.filter(item => item.id !== itemId))
+  const removeItem = (id: string) => {
+    setItems((prev) => prev.filter((item) => item.id !== id))
   }
 
-  const isInWishlist = (itemId: string) => {
-    return items.some(item => item.id === itemId)
-  }
-
-  const clearWishlist = () => {
-    setItems([])
+  const isInWishlist = (id: string) => {
+    return items.some((item) => item.id === id)
   }
 
   return (
-    <WishlistContext.Provider
-      value={{
-        items,
-        addItem,
-        removeItem,
-        isInWishlist,
-        clearWishlist
-      }}
-    >
+    <WishlistContext.Provider value={{ items, addItem, removeItem, isInWishlist }}>
       {children}
     </WishlistContext.Provider>
   )

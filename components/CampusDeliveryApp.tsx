@@ -29,6 +29,8 @@ import { Input } from "@/components/ui/input";
 import { useUser } from "@/lib/user-context";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { MobileNavbar } from "@/components/ui/mobile-navbar";
+import { SearchOverlay } from "@/components/ui/search-overlay";
 
 interface Location {
   id: number;
@@ -50,7 +52,6 @@ interface Restaurant {
 interface Category {
   id: number;
   name: string;
-  icon: React.ReactNode;
 }
 
 const CampusDeliveryApp: React.FC = () => {
@@ -63,6 +64,8 @@ const CampusDeliveryApp: React.FC = () => {
     address: "广东省广州市天河区校园大道1号"
   });
   const [searchLocation, setSearchLocation] = useState("");
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const locations: Location[] = [
     { id: 1, name: "校园大道1号", address: "广东省广州市天河区校园大道1号" },
@@ -79,10 +82,10 @@ const CampusDeliveryApp: React.FC = () => {
   );
 
   const categories: Category[] = [
-    { id: 1, name: "全部", icon: <Home className="size-5" /> },
-    { id: 2, name: "快餐", icon: <ShoppingBag className="size-5" /> },
-    { id: 3, name: "奶茶", icon: <Clock className="size-5" /> },
-    { id: 4, name: "水果", icon: <Heart className="size-5" /> },
+    { id: 1, name: "全部" },
+    { id: 2, name: "快餐" },
+    { id: 3, name: "奶茶" },
+    { id: 4, name: "水果" },
   ];
 
   const restaurants: Restaurant[] = [
@@ -128,61 +131,20 @@ const CampusDeliveryApp: React.FC = () => {
     },
   ];
 
+  const filteredRestaurants = activeCategory === 1
+    ? restaurants
+    : restaurants.filter(restaurant => 
+        restaurant.category === categories.find(c => c.id === activeCategory)?.name
+      );
+
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-background border-b border-border">
-        <div className="container py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Sheet>
-                <SheetTrigger asChild>
-                  <Button variant="outline" size="icon" className="lg:hidden">
-                    <Menu className="size-4" />
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="left">
-                  <SheetHeader>
-                    <SheetTitle>校园外卖</SheetTitle>
-                  </SheetHeader>
-                  <div className="mt-6 flex flex-col gap-4">
-                    {categories.map((category) => (
-                      <Button
-                        key={category.id}
-                        variant="ghost"
-                        className="justify-start"
-                        onClick={() => setActiveCategory(category.id)}
-                      >
-                        {category.icon}
-                        <span className="ml-2">{category.name}</span>
-                      </Button>
-                    ))}
-                  </div>
-                </SheetContent>
-              </Sheet>
-              <div className="flex items-center">
-                <Link href="/">
-                  <h1 className="text-xl font-bold">校园外卖</h1>
-                </Link>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Link 
-                href={isAuthenticated ? "/profile" : "/auth/login"}
-                className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-9 w-9"
-              >
-                <User className="size-5" />
-              </Link>
-              <Link 
-                href="/orders"
-                className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-9 w-9"
-              >
-                <ShoppingBag className="size-5" />
-              </Link>
-            </div>
-          </div>
-        </div>
-      </header>
+      <SearchOverlay
+        isOpen={isSearchOpen}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        onClose={() => setIsSearchOpen(false)}
+      />
 
       {/* Main Content */}
       <main className="container py-4">
@@ -236,28 +198,23 @@ const CampusDeliveryApp: React.FC = () => {
               </div>
             </SheetContent>
           </Sheet>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-            <Input
-              placeholder="搜索商家、商品"
-              className="pl-10"
-            />
-          </div>
         </div>
 
         {/* Categories */}
         <div className="mb-6 overflow-x-auto">
           <div className="flex gap-4 pb-2">
             {categories.map((category) => (
-              <Button
+              <button
                 key={category.id}
-                variant={activeCategory === category.id ? "default" : "outline"}
-                className="flex-shrink-0"
                 onClick={() => setActiveCategory(category.id)}
+                className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
+                  activeCategory === category.id
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted hover:bg-muted/80"
+                }`}
               >
-                {category.icon}
-                <span className="ml-2">{category.name}</span>
-              </Button>
+                {category.name}
+              </button>
             ))}
           </div>
         </div>
@@ -273,44 +230,41 @@ const CampusDeliveryApp: React.FC = () => {
           </div>
         </div>
 
-        {/* Restaurants */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {restaurants
-            .filter(restaurant => activeCategory === 1 || restaurant.category === categories[activeCategory - 1].name)
-            .map((restaurant) => (
-            <Link key={restaurant.id} href={`/merchant/${restaurant.id}`}>
-              <Card className="overflow-hidden hover:shadow-lg transition-shadow">
-                <div className="aspect-video relative">
+        {/* Restaurant List */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredRestaurants.map((restaurant) => (
+            <Card key={restaurant.id} className="overflow-hidden">
+              <CardContent className="p-0">
+                <div className="aspect-video relative overflow-hidden">
                   <img
                     src={restaurant.image}
                     alt={restaurant.name}
-                    className="object-cover w-full h-full"
+                    className="w-full h-full object-cover transition-transform hover:scale-105"
                   />
                 </div>
-                <CardContent className="p-4">
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-bold">{restaurant.name}</h3>
+                <div className="p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-semibold">{restaurant.name}</h3>
                     <div className="flex items-center">
-                      <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                      <span className="ml-1 text-sm">{restaurant.rating}</span>
+                      <Star className="size-4 text-yellow-400 fill-yellow-400 mr-1" />
+                      <span className="text-sm">{restaurant.rating}</span>
                     </div>
                   </div>
-                  <div className="flex items-center text-sm text-muted-foreground">
-                    <Clock className="w-4 h-4 mr-1" />
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
                     <span>{restaurant.deliveryTime}</span>
-                    <span className="mx-2">•</span>
-                    <span>{restaurant.deliveryFee}</span>
+                    <span>·</span>
+                    <span>配送费 {restaurant.deliveryFee}</span>
                   </div>
-                  <div className="mt-2 flex flex-wrap gap-1">
-                    {restaurant.tags.map((tag) => (
-                      <Badge key={tag} variant="secondary" className="text-xs">
+                  <div className="flex flex-wrap gap-2">
+                    {restaurant.tags.map((tag, index) => (
+                      <Badge key={index} variant="secondary">
                         {tag}
                       </Badge>
                     ))}
                   </div>
-                </CardContent>
-              </Card>
-            </Link>
+                </div>
+              </CardContent>
+            </Card>
           ))}
         </div>
       </main>

@@ -1,16 +1,21 @@
 "use client"
 
 import React, { createContext, useContext, useState, useEffect } from 'react'
-import { CartItem } from '@/components/CartSheet'
+
+interface CartItem {
+  id: string
+  name: string
+  price: number
+  quantity: number
+}
 
 interface CartContextType {
   items: CartItem[]
   addItem: (item: CartItem) => void
-  removeItem: (id: string) => void
-  updateQuantity: (id: string, quantity: number) => void
+  removeItem: (itemId: string) => void
+  updateQuantity: (itemId: string, quantity: number) => void
   clearCart: () => void
-  totalItems: number
-  subtotal: number
+  total: number
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined)
@@ -56,15 +61,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     })
   }
 
-  const removeItem = (id: string) => {
-    setItems(prev => prev.filter(item => item.id !== id))
+  const removeItem = (itemId: string) => {
+    setItems(prev => prev.filter(item => item.id !== itemId))
   }
 
-  const updateQuantity = (id: string, quantity: number) => {
+  const updateQuantity = (itemId: string, quantity: number) => {
     if (quantity < 1) return
     setItems(prev => 
       prev.map(item => 
-        item.id === id ? { ...item, quantity } : item
+        item.id === itemId ? { ...item, quantity } : item
       )
     )
   }
@@ -73,8 +78,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setItems([])
   }
 
-  const totalItems = items.reduce((sum, item) => sum + item.quantity, 0)
-  const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+  const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
 
   return (
     <CartContext.Provider value={{
@@ -83,8 +87,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       removeItem,
       updateQuantity,
       clearCart,
-      totalItems,
-      subtotal
+      total,
     }}>
       {children}
     </CartContext.Provider>
