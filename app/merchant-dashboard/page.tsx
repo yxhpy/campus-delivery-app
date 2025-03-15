@@ -8,6 +8,23 @@ import { Button } from "@/components/ui/button"
 import { ShoppingBag, Package, BarChart3, Star, Settings, Clock } from "lucide-react"
 import { toast } from "sonner"
 
+// 模拟商家数据
+const mockMerchantData = {
+  id: "merchant-001",
+  name: "学生食堂",
+  address: "校园大道1号",
+  phone: "123-4567-8910",
+  email: "contact@campus-food.com",
+  status: "approved",
+  createdAt: "2024-01-15",
+  statistics: {
+    totalOrders: 256,
+    pendingOrders: 12,
+    totalProducts: 45,
+    totalRevenue: 15680
+  }
+}
+
 export default function MerchantDashboard() {
   const router = useRouter()
   const { user, isAuthenticated } = useUser()
@@ -29,7 +46,6 @@ export default function MerchantDashboard() {
     <div className="max-w-7xl mx-auto py-8 px-4">
       <h1 className="text-3xl font-bold mb-8">商家后台</h1>
       
-      {/* 统计卡片 */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <Card>
           <CardHeader className="pb-2">
@@ -72,7 +88,6 @@ export default function MerchantDashboard() {
         </Card>
       </div>
       
-      {/* 功能卡片 */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <Card>
           <CardHeader>
@@ -114,7 +129,7 @@ export default function MerchantDashboard() {
           <CardContent>
             <Button 
               className="w-full" 
-              onClick={() => toast.info("数据统计功能正在开发中")}
+              onClick={() => router.push("/merchant-dashboard/statistics")}
             >
               <BarChart3 className="mr-2 h-4 w-4" />
               查看统计
@@ -130,7 +145,7 @@ export default function MerchantDashboard() {
           <CardContent>
             <Button 
               className="w-full" 
-              onClick={() => toast.info("评价管理功能正在开发中")}
+              onClick={() => router.push("/merchant-dashboard/reviews")}
             >
               <Star className="mr-2 h-4 w-4" />
               查看评价
@@ -146,7 +161,7 @@ export default function MerchantDashboard() {
           <CardContent>
             <Button 
               className="w-full" 
-              onClick={() => toast.info("店铺设置功能正在开发中")}
+              onClick={() => router.push("/merchant-dashboard/settings")}
             >
               <Settings className="mr-2 h-4 w-4" />
               店铺设置
@@ -162,7 +177,7 @@ export default function MerchantDashboard() {
           <CardContent>
             <Button 
               className="w-full" 
-              onClick={() => toast.info("营业时间设置功能正在开发中")}
+              onClick={() => router.push("/merchant-dashboard/settings?tab=business-hours")}
             >
               <Clock className="mr-2 h-4 w-4" />
               设置时间

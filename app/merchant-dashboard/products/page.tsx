@@ -95,10 +95,6 @@ export default function MerchantProductsPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [categoryFilter, setCategoryFilter] = useState<string>("all")
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
-  const [productToDelete, setProductToDelete] = useState<string | null>(null)
 
   // 检查用户是否为商家
   useEffect(() => {
@@ -143,25 +139,11 @@ export default function MerchantProductsPage() {
     toast.success(`商品状态已更新为${statusText[newStatus]}`)
   }
 
-  // 查看商品详情
-  const viewProductDetail = (product: Product) => {
-    setSelectedProduct(product)
-    setIsDetailModalOpen(true)
-  }
-
-  // 确认删除商品
-  const confirmDeleteProduct = (productId: string) => {
-    setProductToDelete(productId)
-    setIsDeleteModalOpen(true)
-  }
-
   // 删除商品
-  const deleteProduct = () => {
-    if (productToDelete) {
-      setProducts(prev => prev.filter(product => product.id !== productToDelete))
-      setProductToDelete(null)
-      setIsDeleteModalOpen(false)
-      toast.success("商品已删除")
+  const handleDeleteProduct = (productId: string) => {
+    if (confirm('确定要删除这个商品吗？')) {
+      setProducts(prev => prev.filter(product => product.id !== productId))
+      toast.success('商品已删除')
     }
   }
 
@@ -252,225 +234,95 @@ export default function MerchantProductsPage() {
                 </SelectContent>
               </Select>
               
-              <Button onClick={() => toast.info("添加商品功能正在开发中")}>
+              <Button onClick={() => router.push("/merchant-dashboard/products/new")}>
                 <Plus className="h-4 w-4 mr-1" />
                 添加商品
               </Button>
             </div>
           </div>
 
-          <div className="rounded-md border">
+          <div className="border rounded-lg">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>商品名称</TableHead>
-                  <TableHead>价格</TableHead>
                   <TableHead>分类</TableHead>
+                  <TableHead>价格</TableHead>
                   <TableHead>库存</TableHead>
                   <TableHead>状态</TableHead>
-                  <TableHead className="text-right">操作</TableHead>
+                  <TableHead>操作</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredProducts.length > 0 ? (
-                  filteredProducts.map((product) => (
-                    <TableRow key={product.id}>
-                      <TableCell className="font-medium">{product.name}</TableCell>
-                      <TableCell>¥{product.price.toFixed(2)}</TableCell>
-                      <TableCell>{product.category}</TableCell>
-                      <TableCell>{product.stock}</TableCell>
-                      <TableCell>{renderStatusBadge(product.status)}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end space-x-2">
-                          <Button 
-                            variant="ghost" 
-                            size="icon"
-                            onClick={() => viewProductDetail(product)}
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          
-                          <Button 
-                            variant="ghost" 
-                            size="icon"
-                            onClick={() => toast.info("编辑商品功能正在开发中")}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          
-                          {product.status === 'hidden' ? (
-                            <Button 
-                              variant="ghost" 
-                              size="icon"
-                              onClick={() => handleStatusUpdate(product.id, 'active')}
-                            >
-                              <CheckCircle className="h-4 w-4 text-green-600" />
-                            </Button>
-                          ) : (
-                            <Button 
-                              variant="ghost" 
-                              size="icon"
-                              onClick={() => handleStatusUpdate(product.id, 'hidden')}
-                            >
-                              <XCircle className="h-4 w-4 text-red-600" />
-                            </Button>
-                          )}
-                          
-                          <Button 
-                            variant="ghost" 
-                            size="icon"
-                            onClick={() => confirmDeleteProduct(product.id)}
-                          >
-                            <Trash2 className="h-4 w-4 text-red-600" />
-                          </Button>
+                {filteredProducts.map((product) => (
+                  <TableRow key={product.id}>
+                    <TableCell>
+                      <div className="flex items-center space-x-3">
+                        <img 
+                          src={product.image} 
+                          alt={product.name} 
+                          className="h-10 w-10 rounded-lg object-cover"
+                        />
+                        <div>
+                          <div className="font-medium">{product.name}</div>
+                          <div className="text-sm text-muted-foreground">{product.description}</div>
                         </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-4">
-                      没有找到符合条件的商品
+                      </div>
+                    </TableCell>
+                    <TableCell>{product.category}</TableCell>
+                    <TableCell>¥{product.price}</TableCell>
+                    <TableCell>{product.stock}</TableCell>
+                    <TableCell>{renderStatusBadge(product.status)}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center space-x-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => router.push(`/merchant-dashboard/products/${product.id}`)}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => router.push(`/merchant-dashboard/products/${product.id}/edit`)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDeleteProduct(product.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                        {product.status !== 'active' && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleStatusUpdate(product.id, 'active')}
+                          >
+                            <CheckCircle className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {product.status !== 'hidden' && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleStatusUpdate(product.id, 'hidden')}
+                          >
+                            <XCircle className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
-                )}
+                ))}
               </TableBody>
             </Table>
           </div>
         </CardContent>
       </Card>
-
-      {/* 商品详情对话框 */}
-      {selectedProduct && (
-        <div className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 ${isDetailModalOpen ? 'block' : 'hidden'}`}>
-          <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-auto">
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold">商品详情</h2>
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  onClick={() => setIsDetailModalOpen(false)}
-                >
-                  <XCircle className="h-5 w-5" />
-                </Button>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
-                <div>
-                  <div className="rounded-md overflow-hidden mb-4 h-48">
-                    <img 
-                      src={selectedProduct.image} 
-                      alt={selectedProduct.name} 
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <div>
-                      <p className="text-sm text-muted-foreground">商品状态</p>
-                      <div className="mt-1">{renderStatusBadge(selectedProduct.status)}</div>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">创建时间</p>
-                      <p>{selectedProduct.createdAt}</p>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-sm text-muted-foreground">商品名称</p>
-                    <p className="font-medium text-lg">{selectedProduct.name}</p>
-                  </div>
-                  
-                  <div>
-                    <p className="text-sm text-muted-foreground">价格</p>
-                    <p className="font-medium">¥{selectedProduct.price.toFixed(2)}</p>
-                  </div>
-                  
-                  <div>
-                    <p className="text-sm text-muted-foreground">分类</p>
-                    <p>{selectedProduct.category}</p>
-                  </div>
-                  
-                  <div>
-                    <p className="text-sm text-muted-foreground">库存</p>
-                    <p>{selectedProduct.stock}</p>
-                  </div>
-                  
-                  <div>
-                    <p className="text-sm text-muted-foreground">描述</p>
-                    <p>{selectedProduct.description}</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="flex justify-end space-x-2 mt-6">
-                <Button 
-                  variant="outline"
-                  onClick={() => {
-                    setIsDetailModalOpen(false)
-                    toast.info("编辑商品功能正在开发中")
-                  }}
-                >
-                  <Edit className="h-4 w-4 mr-2" />
-                  编辑商品
-                </Button>
-                
-                {selectedProduct.status === 'hidden' ? (
-                  <Button 
-                    onClick={() => {
-                      handleStatusUpdate(selectedProduct.id, 'active')
-                      setIsDetailModalOpen(false)
-                    }}
-                  >
-                    <CheckCircle className="h-4 w-4 mr-2" />
-                    上架商品
-                  </Button>
-                ) : (
-                  <Button 
-                    variant="outline"
-                    onClick={() => {
-                      handleStatusUpdate(selectedProduct.id, 'hidden')
-                      setIsDetailModalOpen(false)
-                    }}
-                  >
-                    <XCircle className="h-4 w-4 mr-2" />
-                    下架商品
-                  </Button>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 删除确认对话框 */}
-      <div className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 ${isDeleteModalOpen ? 'block' : 'hidden'}`}>
-        <div className="bg-white rounded-lg w-full max-w-md">
-          <div className="p-6">
-            <h2 className="text-xl font-bold mb-4">确认删除</h2>
-            <p className="mb-6">确定要删除这个商品吗？此操作无法撤销。</p>
-            
-            <div className="flex justify-end space-x-2">
-              <Button 
-                variant="outline"
-                onClick={() => setIsDeleteModalOpen(false)}
-              >
-                取消
-              </Button>
-              
-              <Button 
-                variant="destructive"
-                onClick={deleteProduct}
-              >
-                确认删除
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   )
 }
