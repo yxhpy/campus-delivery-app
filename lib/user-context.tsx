@@ -8,6 +8,7 @@ export interface User {
   email: string
   avatar?: string
   role: 'user' | 'merchant' | 'admin'
+  status?: 'active' | 'inactive' | 'banned'
 }
 
 interface UserContextType {
@@ -16,6 +17,8 @@ interface UserContextType {
   login: (email: string, password: string) => Promise<void>
   register: (username: string, email: string, password: string) => Promise<void>
   logout: () => void
+  updateUserRole: (userId: string, role: 'user' | 'merchant' | 'admin') => Promise<void>
+  updateUserStatus: (userId: string, status: 'active' | 'inactive' | 'banned') => Promise<void>
   isAuthenticated: boolean
 }
 
@@ -54,7 +57,36 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             username: '测试用户',
             email: 'test@example.com',
             avatar: 'https://i.pravatar.cc/150?img=3',
-            role: 'user'
+            role: 'user',
+            status: 'active'
+          }
+          
+          setUser(userData)
+          localStorage.setItem('user', JSON.stringify(userData))
+          setLoading(false)
+          resolve()
+        } else if (email === 'admin@example.com' && password === 'admin123') {
+          const userData: User = {
+            id: 'admin-001',
+            username: '管理员',
+            email: 'admin@example.com',
+            avatar: 'https://i.pravatar.cc/150?img=5',
+            role: 'admin',
+            status: 'active'
+          }
+          
+          setUser(userData)
+          localStorage.setItem('user', JSON.stringify(userData))
+          setLoading(false)
+          resolve()
+        } else if (email === 'merchant@example.com' && password === 'merchant123') {
+          const userData: User = {
+            id: 'merchant-001',
+            username: '商家用户',
+            email: 'merchant@example.com',
+            avatar: 'https://i.pravatar.cc/150?img=4',
+            role: 'merchant',
+            status: 'active'
           }
           
           setUser(userData)
@@ -82,7 +114,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             id: `user-${Date.now()}`,
             username,
             email,
-            role: 'user'
+            role: 'user',
+            status: 'active'
           }
           
           setUser(userData)
@@ -103,6 +136,48 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem('user')
   }
 
+  // 更新用户角色
+  const updateUserRole = async (userId: string, role: 'user' | 'merchant' | 'admin') => {
+    setLoading(true)
+    
+    // 模拟API调用
+    return new Promise<void>((resolve, reject) => {
+      setTimeout(() => {
+        if (user && user.id === userId) {
+          const updatedUser = { ...user, role }
+          setUser(updatedUser)
+          localStorage.setItem('user', JSON.stringify(updatedUser))
+          setLoading(false)
+          resolve()
+        } else {
+          setLoading(false)
+          resolve() // 不是当前用户，也视为成功
+        }
+      }, 1000)
+    })
+  }
+
+  // 更新用户状态
+  const updateUserStatus = async (userId: string, status: 'active' | 'inactive' | 'banned') => {
+    setLoading(true)
+    
+    // 模拟API调用
+    return new Promise<void>((resolve, reject) => {
+      setTimeout(() => {
+        if (user && user.id === userId) {
+          const updatedUser = { ...user, status }
+          setUser(updatedUser)
+          localStorage.setItem('user', JSON.stringify(updatedUser))
+          setLoading(false)
+          resolve()
+        } else {
+          setLoading(false)
+          resolve() // 不是当前用户，也视为成功
+        }
+      }, 1000)
+    })
+  }
+
   return (
     <UserContext.Provider value={{
       user,
@@ -110,6 +185,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       login,
       register,
       logout,
+      updateUserRole,
+      updateUserStatus,
       isAuthenticated: !!user
     }}>
       {children}
