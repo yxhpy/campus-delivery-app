@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { Button } from "@/components/ui/button"
-import { User, LogIn, LogOut, UserPlus, ShoppingBag, ShieldCheck, Store } from "lucide-react"
+import { User, LogIn, LogOut, UserPlus, ShoppingBag, ShieldCheck, Store, Heart } from "lucide-react"
 import { useUser } from "@/lib/user-context"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -15,9 +15,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { useWishlist } from "@/lib/wishlist-context"
 
 export function UserMenu() {
   const { user, logout, isAuthenticated } = useUser()
+  const { items: wishlistItems } = useWishlist()
   const router = useRouter()
   
   const handleLogout = () => {
@@ -77,6 +79,11 @@ export function UserMenu() {
           <DropdownMenuItem onClick={() => router.push("/orders")}>
             <ShoppingBag className="mr-2 h-4 w-4" />
             我的订单
+          </DropdownMenuItem>
+          
+          <DropdownMenuItem onClick={() => router.push("/wishlist")}>
+            <Heart className="mr-2 h-4 w-4" />
+            收藏夹 {wishlistItems.length > 0 && `(${wishlistItems.length})`}
           </DropdownMenuItem>
           
           {user?.role === "admin" && (

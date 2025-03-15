@@ -12,6 +12,7 @@ import Image from "next/image"
 import { useState, useEffect } from "react"
 import { useCart } from "@/lib/cart-context"
 import { toast } from "sonner"
+import { useWishlist } from "@/lib/wishlist-context"
 
 interface ProductDetail {
   id: string
@@ -47,7 +48,7 @@ export const ProductDetailPage = React.forwardRef<HTMLDivElement, ProductDetailP
   ({ product, className, ...props }, ref) => {
     const [quantity, setQuantity] = useState(1)
     const [selectedImage, setSelectedImage] = useState(product.image)
-    const [isWished, setIsWished] = useState(false)
+    const { addItem: addToWishlist, removeItem: removeFromWishlist, isInWishlist } = useWishlist()
     const { addItem } = useCart()
 
     useEffect(() => {
@@ -67,7 +68,20 @@ export const ProductDetailPage = React.forwardRef<HTMLDivElement, ProductDetailP
     }
 
     const toggleWishlist = () => {
-      setIsWished(prev => !prev)
+      if (isInWishlist(product.id)) {
+        removeFromWishlist(product.id)
+        toast.success(`已从收藏夹移除 ${product.name}`)
+      } else {
+        addToWishlist({
+          id: product.id,
+          name: product.name,
+          price: product.price,
+          image: product.image,
+          merchantId: product.merchantId,
+          merchantName: product.merchantName
+        })
+        toast.success(`已添加 ${product.name} 到收藏夹`)
+      }
     }
 
     const handleAddToCart = () => {
@@ -149,10 +163,11 @@ export const ProductDetailPage = React.forwardRef<HTMLDivElement, ProductDetailP
                   <Button 
                     variant="outline" 
                     size="icon" 
-                    className={cn(isWished && "text-red-500")}
+                    className={cn(isInWishlist(product.id) && "text-red-500")}
                     onClick={toggleWishlist}
+                    aria-label="收藏"
                   >
-                    <Heart className="h-4 w-4" />
+                    <Heart className={cn("h-4 w-4", isInWishlist(product.id) && "fill-current")} />
                   </Button>
                   <Button variant="outline" size="icon">
                     <Share2 className="h-4 w-4" />

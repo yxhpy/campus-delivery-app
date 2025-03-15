@@ -5,6 +5,8 @@ import { UserProvider } from "@/lib/user-context";
 import { CartSheet } from "@/components/CartSheet";
 import { UserMenu } from "@/components/UserMenu";
 import { Toaster } from "sonner";
+import { WishlistProvider } from "@/lib/wishlist-context";
+import { Navbar } from "@/components/Navbar";
 
 export const metadata: Metadata = {
   title: "校园外卖",
@@ -19,18 +21,19 @@ export default function RootLayout({
   return (
     <html lang="zh-CN" className="scroll-smooth">
       <body className="min-h-screen bg-background font-sans antialiased">
-        <UserProvider>
-          <CartProvider>
-            <div className="relative">
-              <div className="fixed bottom-4 right-4 z-50 md:top-4 md:bottom-auto flex items-center space-x-2">
-                <UserMenu />
-                <CartSheet />
+        <WishlistProvider>
+          <UserProvider>
+            <CartProvider>
+              <div className="relative flex min-h-screen flex-col">
+                <Navbar />
+                <main className="flex-1">
+                  {children}
+                </main>
               </div>
-              {children}
-            </div>
-            <Toaster position="top-center" richColors closeButton />
-          </CartProvider>
-        </UserProvider>
+              <Toaster position="top-center" richColors closeButton />
+            </CartProvider>
+          </UserProvider>
+        </WishlistProvider>
       </body>
     </html>
   );
