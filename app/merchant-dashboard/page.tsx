@@ -1,11 +1,11 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useUser } from "@/lib/user-context"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { ShoppingBag, Package, BarChart3, Settings, MessageSquare } from "lucide-react"
+import { ShoppingBag, Package, BarChart3, Star, Settings, Clock } from "lucide-react"
 import { toast } from "sonner"
 
 // 模拟商家数据
@@ -28,7 +28,6 @@ const mockMerchantData = {
 export default function MerchantDashboard() {
   const router = useRouter()
   const { user, isAuthenticated } = useUser()
-  const [merchantData, setMerchantData] = useState(mockMerchantData)
 
   // 检查用户是否为商家
   useEffect(() => {
@@ -50,11 +49,11 @@ export default function MerchantDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">总订单数</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">总订单</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{merchantData.statistics.totalOrders}</div>
-            <p className="text-xs text-muted-foreground mt-1">较上月增长 12%</p>
+            <div className="text-2xl font-bold">24</div>
+            <p className="text-xs text-muted-foreground mt-1">较上周 +12%</p>
           </CardContent>
         </Card>
         
@@ -63,134 +62,125 @@ export default function MerchantDashboard() {
             <CardTitle className="text-sm font-medium text-muted-foreground">待处理订单</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{merchantData.statistics.pendingOrders}</div>
-            <p className="text-xs text-muted-foreground mt-1">需要尽快处理</p>
+            <div className="text-2xl font-bold">5</div>
+            <p className="text-xs text-muted-foreground mt-1">较昨日 +2</p>
           </CardContent>
         </Card>
         
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">商品数量</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">商品总数</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{merchantData.statistics.totalProducts}</div>
-            <p className="text-xs text-muted-foreground mt-1">上架商品总数</p>
+            <div className="text-2xl font-bold">18</div>
+            <p className="text-xs text-muted-foreground mt-1">本周新增 3</p>
           </CardContent>
         </Card>
         
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">总收入 (元)</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">总收入</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{merchantData.statistics.totalRevenue.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground mt-1">较上月增长 8%</p>
+            <div className="text-2xl font-bold">¥1,280</div>
+            <p className="text-xs text-muted-foreground mt-1">较上周 +8%</p>
           </CardContent>
         </Card>
       </div>
-
+      
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {/* 订单管理 */}
-        <Card className="hover:shadow-md transition-shadow">
+        <Card>
           <CardHeader>
-            <CardTitle className="flex items-center">
-              <ShoppingBag className="mr-2 h-5 w-5" />
-              订单管理
-            </CardTitle>
-            <CardDescription>
-              管理和处理客户订单
-            </CardDescription>
+            <CardTitle>订单管理</CardTitle>
+            <CardDescription>查看和处理顾客订单</CardDescription>
           </CardHeader>
           <CardContent>
             <Button 
               className="w-full" 
-              onClick={() => toast.info("订单管理功能正在开发中")}
+              onClick={() => router.push("/merchant-dashboard/orders")}
             >
+              <ShoppingBag className="mr-2 h-4 w-4" />
               查看订单
             </Button>
           </CardContent>
         </Card>
-
-        {/* 商品管理 */}
-        <Card className="hover:shadow-md transition-shadow">
+        
+        <Card>
           <CardHeader>
-            <CardTitle className="flex items-center">
-              <Package className="mr-2 h-5 w-5" />
-              商品管理
-            </CardTitle>
-            <CardDescription>
-              管理商品信息和库存
-            </CardDescription>
+            <CardTitle>商品管理</CardTitle>
+            <CardDescription>管理店铺商品和库存</CardDescription>
           </CardHeader>
           <CardContent>
             <Button 
               className="w-full" 
-              onClick={() => toast.info("商品管理功能正在开发中")}
+              onClick={() => router.push("/merchant-dashboard/products")}
             >
+              <Package className="mr-2 h-4 w-4" />
               管理商品
             </Button>
           </CardContent>
         </Card>
-
-        {/* 数据统计 */}
-        <Card className="hover:shadow-md transition-shadow">
+        
+        <Card>
           <CardHeader>
-            <CardTitle className="flex items-center">
-              <BarChart3 className="mr-2 h-5 w-5" />
-              数据统计
-            </CardTitle>
-            <CardDescription>
-              查看销售和业绩数据
-            </CardDescription>
+            <CardTitle>数据统计</CardTitle>
+            <CardDescription>查看销售和订单数据</CardDescription>
           </CardHeader>
           <CardContent>
             <Button 
               className="w-full" 
-              onClick={() => toast.info("数据统计功能正在开发中")}
+              onClick={() => router.push("/merchant-dashboard/statistics")}
             >
+              <BarChart3 className="mr-2 h-4 w-4" />
               查看统计
             </Button>
           </CardContent>
         </Card>
-
-        {/* 评价管理 */}
-        <Card className="hover:shadow-md transition-shadow">
+        
+        <Card>
           <CardHeader>
-            <CardTitle className="flex items-center">
-              <MessageSquare className="mr-2 h-5 w-5" />
-              评价管理
-            </CardTitle>
-            <CardDescription>
-              查看和回复客户评价
-            </CardDescription>
+            <CardTitle>评价管理</CardTitle>
+            <CardDescription>查看和回复顾客评价</CardDescription>
           </CardHeader>
           <CardContent>
             <Button 
               className="w-full" 
-              onClick={() => toast.info("评价管理功能正在开发中")}
+              onClick={() => router.push("/merchant-dashboard/reviews")}
             >
+              <Star className="mr-2 h-4 w-4" />
               查看评价
             </Button>
           </CardContent>
         </Card>
-
-        {/* 店铺设置 */}
-        <Card className="hover:shadow-md transition-shadow">
+        
+        <Card>
           <CardHeader>
-            <CardTitle className="flex items-center">
-              <Settings className="mr-2 h-5 w-5" />
-              店铺设置
-            </CardTitle>
-            <CardDescription>
-              管理店铺信息和设置
-            </CardDescription>
+            <CardTitle>店铺设置</CardTitle>
+            <CardDescription>管理店铺基本信息</CardDescription>
           </CardHeader>
           <CardContent>
             <Button 
               className="w-full" 
-              onClick={() => toast.info("店铺设置功能正在开发中")}
+              onClick={() => router.push("/merchant-dashboard/settings")}
             >
+              <Settings className="mr-2 h-4 w-4" />
               店铺设置
+            </Button>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle>营业时间</CardTitle>
+            <CardDescription>设置店铺营业时间</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button 
+              className="w-full" 
+              onClick={() => router.push("/merchant-dashboard/settings?tab=business-hours")}
+            >
+              <Clock className="mr-2 h-4 w-4" />
+              设置时间
             </Button>
           </CardContent>
         </Card>
